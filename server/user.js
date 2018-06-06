@@ -3,13 +3,15 @@ const utils = require("utility");
 const Router = express.Router();
 const model = require("./model");
 const User = model.getModel("user");
+const Chat = model.getModel("chat");
 const _filter = { pwd: 0, __v: 0 };
 Router.get("/info", function(req, res) {
   return res.json({ code: 1 });
 });
 Router.get("/list", function(req, res) {
-  User.find({}, function(err, doc) {
-    return res.json(doc);
+  const { type } = req.query;
+  User.find({ type }, function(err, doc) {
+    return res.json({ code: 0, data: doc });
   });
 });
 Router.post("/login", function(req, res) {
@@ -79,6 +81,35 @@ Router.post("/update", function(req, res) {
     );
     return res.json({ code: 0, data });
   });
+});
+Router.get("/getmsglist", function(req, res) {
+  const user = req.cookies.userid;
+  User.find({}, function(e, userdoc) {
+    let users = {};
+    userdoc.forEach(v => {
+      users[v._id] = { name: v.user, avatar: v.avatar };
+    });
+    Chat.find({ $or: [{ from: user }, { to: user }] }, function(err, doc) {
+      if (!err) {
+        return res.json({ code: 0, msgs: doc, users: users });
+      }
+    });
+  });
+});
+Router.post("/readmsg", function(req, res) {
+  const userid = req.cookie.userid;
+  const { from } = req.body;
+  Chat.update(
+    { from, to: userid },
+    { $set: { read: true } },
+    { multi: true },
+    function(err, doc) {
+      if (!err) {
+        return res.json({ code: 0, num: doc.nModified });
+      }
+      return res.json({ code: 1, msg: "修改失败" });
+    }
+  );
 });
 function md5Pwd(pwd) {
   const salt = "nimadehahGGHE__JJCEIJU883878";

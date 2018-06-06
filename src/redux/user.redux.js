@@ -5,6 +5,7 @@ const ERROR_MSG = "ERROR_MSG";
 // const LOGIN_SUCCESS = "LOGIN_SUCCESS";
 const LOAD_DATA = "LOAD_DATA";
 const AUTH_SUCCESS = "AUTH_SUCCESS";
+const LOGOUT = "LOGOUT";
 
 const initState = {
   redirectTo: "",
@@ -41,6 +42,8 @@ export function user(state = initState, action) {
         redirectTo: getRedirectPath(action.payload),
         ...action.payload
       };
+    case LOGOUT:
+      return { ...initState, redirectTo: "/login" };
     default:
       return state;
   }
@@ -59,6 +62,9 @@ function authSuccess(data) {
   // 过滤密码字段，防止前台看到密码信息
   const { pwd, ...obj } = data;
   return { type: AUTH_SUCCESS, payload: obj };
+}
+export function logoutSubmit() {
+  return { type: LOGOUT };
 }
 export function login({ user, pwd }) {
   if (!user || !pwd) {
